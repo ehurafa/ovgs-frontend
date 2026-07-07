@@ -36,19 +36,31 @@ The project follows a **feature-based structure** (screaming architecture): fold
 
 ```
 src/
-  app/                  # Next.js routes
-  features/             # one folder per business domain
-    ordens-venda/
-    clientes/
-    tipos-transporte/
-    itens/
-    agendamento/
+  app/                   # Next.js routes (thin routing layer only)
+    sales-orders/
+    customers/
+    transport-types/
+    items/
+    scheduling/
+  features/              # one folder per business domain
+    sales-orders/
+      components/
+      hooks/
+      services/
+      types.ts
+      schemas.ts
+    customers/
+    transport-types/
+    items/
+    scheduling/
   shared/                # reusable components, hooks, utils
   lib/
     api/                 # HTTP client + MSW mocks
     store/               # Redux store, slices, sagas
-    query/                # React Query client config
+    query/               # React Query client config
 ```
+
+`app/` stays intentionally thin — pages import and render components from `features/`. This keeps routing and business logic decoupled.
 
 ## Sales Order Lifecycle
 
@@ -70,10 +82,17 @@ stateDiagram-v2
 - A Sales Order must contain at least one previously registered item.
 - Status transitions are validated on the client before triggering the corresponding action.
 
+## Domain Modeling
+
+- **Entity types vs. input types**: `features/*/types.ts` models entities as they exist once persisted (including `id`, `createdAt`, etc.). `features/*/schemas.ts` (Zod) models what the user actually submits through a form — a narrower shape, with `id`/timestamps intentionally omitted. Input types are derived from the schemas (`z.infer<typeof schema>`), so validation is the single source of truth for form shapes.
+- **Union types over `enum`**: statuses (`SalesOrderStatus`) and fixed values (`DeliveryWindow`) are modeled as string literal unions rather than TypeScript `enum`s, avoiding extra runtime artifacts and integrating cleanly with Zod (`z.enum`).
+- **Status transitions as data**: valid transitions live in a single `VALID_STATUS_TRANSITIONS` map, so UI, form validation, and any guard logic all read from the same source instead of duplicating conditionals.
+
 ## Architectural Decisions & Trade-offs
 
 - **React Compiler: not enabled.** At this stage, memoization (`useMemo`, `useCallback`, `React.memo`) is handled explicitly rather than relying on automatic compiler optimizations. This keeps rendering behavior predictable while combined with Redux and React Query, both of which already manage their own caching/selector strategies, and demonstrates deliberate performance decisions rather than delegating them to an experimental tool.
 - **React Query vs Redux Toolkit split**: server-derived data (orders, customers, items) lives in React Query's cache; UI and cross-cutting client state (filters, scheduling wizard, transition validation) lives in Redux.
+- **Cross-entity business rules kept outside static schemas.** The rule "transport type must be authorized for the selected customer" depends on server-fetched state (the customer's authorized list) that a standalone Zod schema has no access to. Rather than forcing this into the schema, it's validated at form-submission time, once the customer data is available via React Query. This keeps schemas pure and side-effect-free.
 
 ## Getting Started
 
