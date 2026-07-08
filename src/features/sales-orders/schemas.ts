@@ -1,14 +1,14 @@
 import { z } from "zod";
 
 const salesOrderItemSchema = z.object({
-  itemId: z.string().min(1, "Item is required"),
-  quantity: z.number().int().positive("Quantity must be greater than zero"),
+  itemId: z.string().min(1, "Item é obrigatório"),
+  quantity: z.number().int().positive("Quantidade deve ser maior que zero"),
 });
 
 export const createSalesOrderSchema = z.object({
-  customerId: z.string().min(1, "Customer is required"),
-  transportTypeId: z.string().min(1, "Transport type is required"),
-  items: z.array(salesOrderItemSchema).min(1, "Add at least one item"),
+  customerId: z.string().min(1, "Cliente é obrigatório"),
+  transportTypeId: z.string().min(1, "Tipo de transporte é obrigatório"),
+  items: z.array(salesOrderItemSchema).min(1, "Adicione ao menos um item"),
 });
 
 export type CreateSalesOrderInput = z.infer<typeof createSalesOrderSchema>;
