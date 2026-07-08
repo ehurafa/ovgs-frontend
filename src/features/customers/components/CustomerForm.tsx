@@ -6,6 +6,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { createCustomerSchema, type CreateCustomerInput } from "@/features/customers/schemas";
 import { useCreateCustomer } from "@/features/customers/hooks/useCreateCustomer";
 import { useTransportTypes } from "@/features/transport-types/hooks/useTransportTypes";
+import { TextField } from "@/shared/components/ui/TextField";
+import { Checkbox } from "@/shared/components/ui/Checkbox";
+import { Button } from "@/shared/components/ui/Button";
 
 export function CustomerForm() {
   const [justCreated, setJustCreated] = useState(false);
@@ -35,43 +38,31 @@ export function CustomerForm() {
 
   return (
     <form onSubmit={onSubmit} className="max-w-md space-y-5" noValidate>
-      <div>
-        <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-          Nome do cliente
-        </label>
-        <input
-          id="name"
-          type="text"
-          {...register("name")}
-          className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-        />
-        {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>}
-      </div>
+      <TextField
+        id="name"
+        label="Nome do cliente"
+        {...register("name")}
+        error={errors.name?.message}
+      />
+
+      <TextField
+        id="document"
+        label="Documento (CPF/CNPJ)"
+        {...register("document")}
+        error={errors.document?.message}
+      />
 
       <div>
-        <label htmlFor="document" className="block text-sm font-medium text-gray-700">
-          Documento (CPF/CNPJ)
-        </label>
-        <input
-          id="document"
-          type="text"
-          {...register("document")}
-          className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-        />
-        {errors.document && <p className="mt-1 text-sm text-red-600">{errors.document.message}</p>}
-      </div>
-
-      <div>
-        <span className="block text-sm font-medium text-gray-700">
+        <span className="text-on-surface block text-sm font-medium">
           Tipos de transporte autorizados
         </span>
 
         {isLoadingTransportTypes && (
-          <p className="mt-1 text-sm text-gray-500">Carregando tipos de transporte…</p>
+          <p className="text-on-surface-muted mt-1 text-sm">Carregando tipos de transporte…</p>
         )}
 
         {transportTypes && transportTypes.length === 0 && (
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="text-on-surface-muted mt-1 text-sm">
             Nenhum tipo de transporte cadastrado ainda. Cadastre um antes de criar um cliente.
           </p>
         )}
@@ -82,38 +73,33 @@ export function CustomerForm() {
             control={control}
             render={({ field }) => (
               <div className="mt-2 space-y-2">
-                {transportTypes.map((transportType) => {
-                  const checked = field.value.includes(transportType.id);
-                  return (
-                    <label key={transportType.id} className="flex items-center gap-2 text-sm">
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        onChange={(event) => {
-                          field.onChange(
-                            event.target.checked
-                              ? [...field.value, transportType.id]
-                              : field.value.filter((id) => id !== transportType.id)
-                          );
-                        }}
-                        className="h-4 w-4 rounded border-gray-300"
-                      />
-                      {transportType.name}
-                    </label>
-                  );
-                })}
+                {transportTypes.map((transportType) => (
+                  <Checkbox
+                    key={transportType.id}
+                    id={`transport-${transportType.id}`}
+                    label={transportType.name}
+                    checked={field.value.includes(transportType.id)}
+                    onChange={(event) => {
+                      field.onChange(
+                        event.target.checked
+                          ? [...field.value, transportType.id]
+                          : field.value.filter((id) => id !== transportType.id)
+                      );
+                    }}
+                  />
+                ))}
               </div>
             )}
           />
         )}
 
         {errors.authorizedTransportTypeIds && (
-          <p className="mt-1 text-sm text-red-600">{errors.authorizedTransportTypeIds.message}</p>
+          <p className="text-error mt-1 text-sm">{errors.authorizedTransportTypeIds.message}</p>
         )}
       </div>
 
       {createCustomer.isError && (
-        <p className="text-sm text-red-600" role="alert">
+        <p className="text-error text-sm" role="alert">
           Não foi possível salvar este cliente: {createCustomer.error.message}
         </p>
       )}
@@ -124,13 +110,9 @@ export function CustomerForm() {
         </p>
       )}
 
-      <button
-        type="submit"
-        disabled={createCustomer.isPending}
-        className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-      >
+      <Button type="submit" disabled={createCustomer.isPending}>
         {createCustomer.isPending ? "Salvando…" : "Salvar cliente"}
-      </button>
+      </Button>
     </form>
   );
 }
