@@ -29,6 +29,17 @@ export const handlers = [
     return HttpResponse.json(created, { status: 201 });
   }),
 
+  http.patch(`${BASE}/transport-types/:id`, async ({ params, request }) => {
+    const transportType = transportTypes.find((t) => t.id === params.id);
+    if (!transportType) {
+      return HttpResponse.json({ message: "Transport type not found" }, { status: 404 });
+    }
+
+    const body = (await request.json()) as CreateTransportTypeInput;
+    Object.assign(transportType, body);
+    return HttpResponse.json(transportType);
+  }),
+
   // --- Items ---
   http.get(`${BASE}/items`, () => HttpResponse.json(items)),
 
