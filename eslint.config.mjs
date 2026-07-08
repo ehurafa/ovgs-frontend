@@ -6,6 +6,14 @@ import eslintConfigPrettier from "eslint-config-prettier/flat";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  // React Compiler is explicitly NOT enabled in this project (see
+  // README "Architectural Decisions"), so lint warnings that only
+  // matter when the compiler is active are noise here, not real bugs.
+  {
+    rules: {
+      "react-hooks/incompatible-library": "off",
+    },
+  },
   // Must come after nextVitals/nextTs — disables ESLint's stylistic
   // rules so Prettier is the single source of truth for formatting.
   eslintConfigPrettier,
