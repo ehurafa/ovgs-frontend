@@ -1,4 +1,4 @@
-# OVGS — Sales Order Management System (Frontend)
+# OVGS - Sales Order Management System (Frontend)
 
 Frontend application for managing the lifecycle of Sales Orders (_Ordens de Venda_), built as part of a technical challenge focused on frontend architecture, state management, and code quality.
 
@@ -48,20 +48,29 @@ src/
       components/
       hooks/
       services/
+      store/              # salesOrderFiltersSlice
       types.ts
       schemas.ts
     customers/
     transport-types/
     items/
     scheduling/
-  shared/                # reusable components, hooks, utils
+      services/
+      store/              # schedulingSlice, schedulingSaga
+      types.ts
+      schemas.ts
+  shared/
+    store/                # auditSlice (cross-cutting)
+    types.ts
   lib/
-    api/                 # HTTP client + MSW mocks
-    store/               # Redux store, slices, sagas
-    query/               # React Query client config
+    api/
+      mocks/               # data, handlers, browser, MockProvider
+      httpClient.ts
+    query/                 # queryClient, QueryProvider
+    store/                 # store, rootReducer, rootSaga, hooks, StoreProvider
 ```
 
-`app/` stays intentionally thin — pages import and render components from `features/`. This keeps routing and business logic decoupled.
+`app/` stays intentionally thin - pages import and render components from `features/`. This keeps routing and business logic decoupled.
 
 ## Sales Order Lifecycle
 
@@ -77,6 +86,16 @@ stateDiagram-v2
     ENTREGUE --> [*]
 ```
 
+## State Management
+
+Three tools, three distinct responsibilities - no overlap:
+
+- **React Query** owns server state: sales orders, customers, items, transport types. Fetching, caching, invalidation.
+- **Redux Toolkit** owns client/UI state: `salesOrderFilters` (Monitoramento Operacional filters), `scheduling` (confirmation flow status), `audit` (client-visible audit trail).
+- **Redux Saga** owns multi-step async orchestration - currently the scheduling confirmation flow: call the API → log an audit event → sync the React Query cache directly → notify the UI. A component only dispatches one intent action (`confirmSchedulingRequested`) and reads back a status (`idle | confirming | confirmed | error`); it knows nothing about the API call, the audit event, or the cache sync happening underneath.
+- **`thunk` middleware is disabled** in the store config - Saga is the single async pattern used, avoiding two competing ways to do the same thing.
+- The saga imports the `queryClient` singleton directly (not through React Context), so it can update React Query's cache from outside any component - this is also why provider nesting order between `StoreProvider` and `QueryProvider` doesn't matter; only `MockProvider` must stay outermost.
+
 ## Business Rules (Frontend Scope)
 
 - A Sales Order can only be created if the selected transport type is authorized for the selected customer.
@@ -85,7 +104,7 @@ stateDiagram-v2
 
 ## Domain Modeling
 
-- **Entity types vs. input types**: `features/*/types.ts` models entities as they exist once persisted (including `id`, `createdAt`, etc.). `features/*/schemas.ts` (Zod) models what the user actually submits through a form — a narrower shape, with `id`/timestamps intentionally omitted. Input types are derived from the schemas (`z.infer<typeof schema>`), so validation is the single source of truth for form shapes.
+- **Entity types vs. input types**: `features/*/types.ts` models entities as they exist once persisted (including `id`, `createdAt`, etc.). `features/*/schemas.ts` (Zod) models what the user actually submits through a form - a narrower shape, with `id`/timestamps intentionally omitted. Input types are derived from the schemas (`z.infer<typeof schema>`), so validation is the single source of truth for form shapes.
 - **Union types over `enum`**: statuses (`SalesOrderStatus`) and fixed values (`DeliveryWindow`) are modeled as string literal unions rather than TypeScript `enum`s, avoiding extra runtime artifacts and integrating cleanly with Zod (`z.enum`).
 - **Status transitions as data**: valid transitions live in a single `VALID_STATUS_TRANSITIONS` map, so UI, form validation, and any guard logic all read from the same source instead of duplicating conditionals.
 
@@ -94,12 +113,14 @@ stateDiagram-v2
 - **React Compiler: not enabled.** At this stage, memoization (`useMemo`, `useCallback`, `React.memo`) is handled explicitly rather than relying on automatic compiler optimizations. This keeps rendering behavior predictable while combined with Redux and React Query, both of which already manage their own caching/selector strategies, and demonstrates deliberate performance decisions rather than delegating them to an experimental tool.
 - **React Query vs Redux Toolkit split**: server-derived data (orders, customers, items) lives in React Query's cache; UI and cross-cutting client state (filters, scheduling wizard, transition validation) lives in Redux.
 - **Cross-entity business rules kept outside static schemas.** The rule "transport type must be authorized for the selected customer" depends on server-fetched state (the customer's authorized list) that a standalone Zod schema has no access to. Rather than forcing this into the schema, it's validated at form-submission time, once the customer data is available via React Query. This keeps schemas pure and side-effect-free.
+- **Audit trail is client-side only, not persisted.** Since the backend is out of scope, the `audit` Redux slice keeps an in-memory log of events (e.g. scheduling changes) for display purposes. A real implementation would persist these server-side; this is an explicit simplification, not an oversight.
+- **Saga used for orchestration, not for every async call.** Sales order CRUD and simple mutations go through plain React Query `useMutation` hooks - no saga involved. Saga is reserved for flows that genuinely coordinate multiple sequential side effects with one shared error boundary (currently: scheduling confirmation → audit log → cache sync). Introducing a saga for a single API call would just be indirection without benefit.
 
 ## Code Quality & Tooling
 
-- **ESLint** — code-quality rules only (`eslint-config-next`, covering React/Next.js/TypeScript best practices).
-- **Prettier** — sole source of truth for formatting, including a Tailwind-aware plugin (`prettier-plugin-tailwindcss`) that auto-sorts utility classes into a consistent order. `eslint-config-prettier` disables any ESLint stylistic rule that could conflict with Prettier, so the two tools never fight over the same concern.
-- **Husky + lint-staged** — a pre-commit hook runs ESLint (`--fix`) and Prettier against staged files only, so formatting/lint issues never reach a commit.
+- **ESLint** - code-quality rules only (`eslint-config-next`, covering React/Next.js/TypeScript best practices).
+- **Prettier** - sole source of truth for formatting, including a Tailwind-aware plugin (`prettier-plugin-tailwindcss`) that auto-sorts utility classes into a consistent order. `eslint-config-prettier` disables any ESLint stylistic rule that could conflict with Prettier, so the two tools never fight over the same concern.
+- **Husky + lint-staged** - a pre-commit hook runs ESLint (`--fix`) and Prettier against staged files only, so formatting/lint issues never reach a commit.
 
 ```bash
 npm run lint          # check code-quality rules
@@ -109,7 +130,7 @@ npm run format:check  # verify formatting without writing changes
 
 ## Getting Started
 
-> ⚠️ Setup in progress — instructions will be finalized once dependencies are installed.
+> ⚠️ Setup in progress - instructions will be finalized once dependencies are installed.
 
 ```bash
 npm install
@@ -118,10 +139,24 @@ npm run dev
 
 ## Testing
 
+- **Jest** (via `next/jest`, SWC-based, no Babel config needed) + **React Testing Library** + **user-event**.
+- **MSW powers both the running app and the tests** - `lib/api/mocks/handlers.ts` is shared by `browser.ts` (dev server) and `server.ts` (`setupServer`, used in tests), so tests exercise the exact same mocked API contract the UI runs against.
+- Every test gets its **own `QueryClient`** (`shared/test-utils/renderWithQueryClient.tsx`) - never the app's singleton, to avoid cache bleeding between tests.
+- `onUnhandledRequest: "error"` in tests (stricter than the app's `"bypass"`) - a test silently passing against a real network call is worse than a loud failure telling you an endpoint wasn't mocked.
+
 ```bash
-npm test
+npm test            # run all tests
+npm run test:watch  # watch mode
 ```
+
+### jsdom + MSW v2 polyfill setup
+
+Jest's `jsdom` environment doesn't implement the Fetch API (`Request`/`Response`/`fetch`) or a few other Node/Web globals that MSW's Node interceptors depend on. Getting this combination running requires a dedicated polyfill file, loaded _before_ the test environment via `setupFiles` (not `setupFilesAfterEnv`):
+
+- `jest.polyfills.js` defines `TextEncoder`/`TextDecoder`, `ReadableStream`/`TransformStream`/`WritableStream`, `MessageChannel`/`MessagePort`, `BroadcastChannel`, and `fetch`/`Request`/`Response`/`Headers`/`FormData` (the last group sourced from `undici`, in the correct order - the stream/message globals must exist _before_ `undici` is required, since its fetch implementation reads them at import time).
+- Every defined property uses `configurable: true`. Without it, MSW's own interceptors fail with `Cannot redefine property` the moment they try to patch these same globals again - a fetch/Request polyfill that can't later be redefined defeats the purpose of an interceptor.
+- `jest.config.mjs` sets `transformIgnorePatterns: []` (transforms everything, including `node_modules`) because MSW ships several ESM-only internal dependencies (`@mswjs/interceptors`, `rettime`, and others); allow-listing them one at a time as errors surfaced proved slower than just transforming everything - a negligible performance cost for this project's test suite size.
 
 ## Status
 
-🚧 Work in progress — this README is being built incrementally alongside development.
+🚧 Work in progress - this README is being built incrementally alongside development.
