@@ -5,4 +5,4 @@ export interface Customer {
   name: string;
   document: string; // CNPJ/CPF
   authorizedTransportTypeIds: TransportType["id"][];
-}
+};
