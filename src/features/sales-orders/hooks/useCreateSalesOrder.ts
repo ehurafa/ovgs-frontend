@@ -11,4 +11,4 @@ export function useCreateSalesOrder() {
       queryClient.invalidateQueries({ queryKey: salesOrderKeys.lists() });
     },
   });
-};
+}

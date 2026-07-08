@@ -8,4 +8,4 @@ export function useSalesOrder(id: string) {
     queryFn: () => salesOrdersService.getById(id),
     enabled: Boolean(id),
   });
-};
+}

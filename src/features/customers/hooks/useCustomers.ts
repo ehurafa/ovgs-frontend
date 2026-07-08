@@ -7,4 +7,4 @@ export function useCustomers() {
     queryKey: customerKeys.lists(),
     queryFn: customersService.list,
   });
-};
+}

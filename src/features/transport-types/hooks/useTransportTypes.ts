@@ -7,4 +7,4 @@ export function useTransportTypes() {
     queryKey: transportTypeKeys.lists(),
     queryFn: transportTypesService.list,
   });
-};
+}

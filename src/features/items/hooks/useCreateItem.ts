@@ -11,4 +11,4 @@ export function useCreateItem() {
       queryClient.invalidateQueries({ queryKey: itemKeys.lists() });
     },
   });
-};
+}

@@ -7,4 +7,4 @@ export function useItems() {
     queryKey: itemKeys.lists(),
     queryFn: itemsService.list,
   });
-};
+}

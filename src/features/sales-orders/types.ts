@@ -8,12 +8,7 @@ import type { DeliveryScheduling } from "@/features/scheduling/types";
  * Modeled as a union type (not `enum`) to avoid unnecessary runtime
  * artifacts and to integrate cleanly with Zod schema validation.
  */
-export type SalesOrderStatus =
-  | "CRIADA"
-  | "PLANEJADA"
-  | "AGENDADA"
-  | "EM_TRANSPORTE"
-  | "ENTREGUE";
+export type SalesOrderStatus = "CRIADA" | "PLANEJADA" | "AGENDADA" | "EM_TRANSPORTE" | "ENTREGUE";
 
 /**
  * Defines which status transitions are valid.

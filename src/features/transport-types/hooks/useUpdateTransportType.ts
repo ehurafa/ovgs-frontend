@@ -12,4 +12,4 @@ export function useUpdateTransportType(id: string) {
       queryClient.invalidateQueries({ queryKey: transportTypeKeys.lists() });
     },
   });
-};
+}

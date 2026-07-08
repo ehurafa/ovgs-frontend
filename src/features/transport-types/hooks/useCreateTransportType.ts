@@ -11,4 +11,4 @@ export function useCreateTransportType() {
       queryClient.invalidateQueries({ queryKey: transportTypeKeys.lists() });
     },
   });
-};
+}

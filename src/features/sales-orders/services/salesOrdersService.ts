@@ -6,7 +6,7 @@ export interface SalesOrderFilters {
   status?: SalesOrderStatus;
   customerId?: string;
   transportTypeId?: string;
-};
+}
 
 function toQueryString(filters: SalesOrderFilters) {
   const params = new URLSearchParams();
@@ -15,7 +15,7 @@ function toQueryString(filters: SalesOrderFilters) {
   if (filters.transportTypeId) params.set("transportTypeId", filters.transportTypeId);
   const query = params.toString();
   return query ? `?${query}` : "";
-};
+}
 
 export const salesOrdersService = {
   list: (filters: SalesOrderFilters = {}) =>
@@ -23,8 +23,7 @@ export const salesOrdersService = {
 
   getById: (id: string) => httpClient.get<SalesOrder>(`/sales-orders/${id}`),
 
-  create: (input: CreateSalesOrderInput) =>
-    httpClient.post<SalesOrder>("/sales-orders", input),
+  create: (input: CreateSalesOrderInput) => httpClient.post<SalesOrder>("/sales-orders", input),
 
   updateStatus: (id: string, status: SalesOrderStatus) =>
     httpClient.patch<SalesOrder>(`/sales-orders/${id}/status`, { status }),

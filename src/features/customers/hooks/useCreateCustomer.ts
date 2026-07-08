@@ -11,4 +11,4 @@ export function useCreateCustomer() {
       queryClient.invalidateQueries({ queryKey: customerKeys.lists() });
     },
   });
-};
+}

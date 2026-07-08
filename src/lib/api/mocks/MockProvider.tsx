@@ -20,4 +20,4 @@ export function MockProvider({ children }: { children: React.ReactNode }) {
 
   if (!ready) return null;
   return <>{children}</>;
-};
+}

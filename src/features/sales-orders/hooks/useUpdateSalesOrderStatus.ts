@@ -13,4 +13,4 @@ export function useUpdateSalesOrderStatus(id: string) {
       queryClient.invalidateQueries({ queryKey: salesOrderKeys.lists() });
     },
   });
-};
+}
