@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { QueryProvider } from "@/lib/query/QueryProvider";
 import { MockProvider } from "@/lib/api/mocks/MockProvider";
+import { StoreProvider } from "@/lib/store/StoreProvider";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -28,7 +29,9 @@ export default function RootLayout({
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
         <MockProvider>
-          <QueryProvider>{children}</QueryProvider>
+          <StoreProvider>
+            <QueryProvider>{children}</QueryProvider>
+          </StoreProvider>
         </MockProvider>
       </body>
     </html>

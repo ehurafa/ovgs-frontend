@@ -1,6 +1,10 @@
 import { http, HttpResponse } from "msw";
 import { customers, transportTypes, items, salesOrders } from "./data";
-import { VALID_STATUS_TRANSITIONS, type SalesOrderStatus } from "@/features/sales-orders/types";
+import {
+  VALID_STATUS_TRANSITIONS,
+  type SalesOrderStatus,
+  type SalesOrder,
+} from "@/features/sales-orders/types";
 import type { CreateCustomerInput } from "@/features/customers/schemas";
 import type { CreateTransportTypeInput } from "@/features/transport-types/schemas";
 import type { CreateItemInput } from "@/features/items/schemas";
@@ -104,6 +108,27 @@ export const handlers = [
     }
 
     order.status = nextStatus;
+    order.updatedAt = new Date().toISOString();
+    return HttpResponse.json(order);
+  }),
+
+  // Confirms (or reschedules) delivery scheduling for an order.
+  // Allowed from PLANEJADA (first confirmation) or AGENDADA (reschedule).
+  http.patch(`${BASE}/sales-orders/:id/scheduling`, async ({ params, request }) => {
+    const order = salesOrders.find((o) => o.id === params.id);
+    if (!order) return HttpResponse.json({ message: "Sales order not found" }, { status: 404 });
+
+    const isReschedule = order.status === "AGENDADA";
+    if (order.status !== "PLANEJADA" && !isReschedule) {
+      return HttpResponse.json(
+        { message: `Scheduling cannot be set while order is ${order.status}` },
+        { status: 400 }
+      );
+    }
+
+    const body = (await request.json()) as { deliveryDate: string; window: string };
+    order.scheduling = { ...body, confirmed: true } as SalesOrder["scheduling"];
+    order.status = "AGENDADA";
     order.updatedAt = new Date().toISOString();
     return HttpResponse.json(order);
   }),
