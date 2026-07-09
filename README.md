@@ -48,6 +48,7 @@ src/
     items/
     scheduling/
     monitoring/
+    audit/
   features/              # one folder per business domain
     sales-orders/
       components/
@@ -66,7 +67,9 @@ src/
       types.ts
       schemas.ts
   shared/
-    components/ui/        # TextField, Select, Checkbox, Button, Card
+    components/
+      ui/                  # TextField, Select, Checkbox, Button, Card
+      AuditTrail.tsx        # cross-cutting, not owned by one feature
     test-utils/           # renderWithQueryClient, renderWithProviders
     store/                # auditSlice (cross-cutting)
     types.ts
@@ -114,6 +117,7 @@ Three tools, three distinct responsibilities - no overlap:
 - **Redux Saga** owns multi-step async orchestration - currently the scheduling confirmation flow: call the API → log an audit event → sync the React Query cache directly → notify the UI. A component only dispatches one intent action (`confirmSchedulingRequested`) and reads back a status (`idle | confirming | confirmed | error`); it knows nothing about the API call, the audit event, or the cache sync happening underneath.
 - **`thunk` middleware is disabled** in the store config - Saga is the single async pattern used, avoiding two competing ways to do the same thing.
 - The saga imports the `queryClient` singleton directly (not through React Context), so it can update React Query's cache from outside any component - this is also why provider nesting order between `StoreProvider` and `QueryProvider` doesn't matter; only `MockProvider` must stay outermost.
+- **Audit logging also happens outside the saga**, directly from React Query mutation hooks (`useCreateSalesOrder`, `useUpdateSalesOrderStatus`) via `store.dispatch(auditEventLogged(...))` on the app's singleton `store` - the same "reach for the singleton directly" pattern the saga uses for `queryClient`. This keeps audit logging co-located with the business event that caused it, regardless of whether that event is saga-orchestrated (scheduling) or a plain mutation (creation, status change).
 
 ## Business Rules (Frontend Scope)
 
@@ -126,6 +130,22 @@ Three tools, three distinct responsibilities - no overlap:
 - **Entity types vs. input types**: `features/*/types.ts` models entities as they exist once persisted (including `id`, `createdAt`, etc.). `features/*/schemas.ts` (Zod) models what the user actually submits through a form - a narrower shape, with `id`/timestamps intentionally omitted. Input types are derived from the schemas (`z.infer<typeof schema>`), so validation is the single source of truth for form shapes.
 - **Union types over `enum`**: statuses (`SalesOrderStatus`) and fixed values (`DeliveryWindow`) are modeled as string literal unions rather than TypeScript `enum`s, avoiding extra runtime artifacts and integrating cleanly with Zod (`z.enum`).
 - **Status transitions as data**: valid transitions live in a single `VALID_STATUS_TRANSITIONS` map, so UI, form validation, and any guard logic all read from the same source instead of duplicating conditionals.
+
+## Scalability Considerations
+
+- **Screaming architecture scales by addition, not modification.** Adding a new business domain means adding a new `features/<name>/` folder (types, schemas, services, hooks, components) without touching existing ones - the codebase doesn't accumulate cross-cutting edits as it grows.
+- **React Query's cache reduces redundant network traffic** as more screens read the same data (e.g. `customers` is fetched once and reused by the Customer form, the Sales Order form, and the Monitoring filters, all sharing one cache entry keyed by `customerKeys.lists()`).
+- **Redux state is narrow and scoped**, not a single growing tree: `salesOrderFilters`, `scheduling`, `audit` are independent slices. Adding a new cross-cutting concern means adding a new slice, not expanding an existing one.
+- **No pagination/virtualization yet.** Sales Orders, Customers, and Audit Trail lists currently render every record client-side. This is acceptable for the mocked dataset size in this challenge, but would be the first thing to address for production scale - the `SalesOrderFilters` type (and `useSalesOrders(filters)`) is already shaped to make adding `page`/`pageSize` params a small, additive change rather than a rework.
+- **The mocked backend is a drop-in-replaceable boundary.** The frontend only depends on `httpClient` + each feature's `service.ts` - none of it knows MSW exists. Pointing `httpClient` at a real API (same paths/shapes) requires no changes to hooks, components, or Redux/Saga code.
+
+## Performance Considerations
+
+- **`staleTime: 30_000`** on the app's `QueryClient` avoids redundant refetches when navigating between screens that share data within a short window (e.g. going from the Sales Orders list to a detail page and back).
+- **React Compiler intentionally not enabled** - memoization is explicit (`useMemo`/`useCallback`/`React.memo`) where it matters, rather than relying on automatic optimization. See Architectural Decisions.
+- **Status transition logic is O(1) lookup**, not recomputed conditionals: `VALID_STATUS_TRANSITIONS[order.status]` is a plain object index, used identically by the UI, the mocked API, and (implicitly) any future backend validation.
+- **`setQueryData` over refetch where the response already has the answer** - e.g. `useUpdateSalesOrderStatus` writes the mutation's response directly into the detail cache instead of triggering a second network round-trip just to re-read what was already returned.
+- **Known gap**: no code-splitting/lazy-loading beyond what Next.js's App Router does automatically per route. For a much larger app, heavier screens (e.g. the Sales Order form, with its dynamic item list) would be candidates for `next/dynamic` if bundle size became a concern - not necessary at this project's current scale.
 
 ## Architectural Decisions & Trade-offs
 
@@ -146,6 +166,16 @@ npm run lint          # check code-quality rules
 npm run format        # format the whole project
 npm run format:check  # verify formatting without writing changes
 ```
+
+## CI/CD
+
+`azure-pipelines.yml` (repo root) defines three sequential stages, each gated on the previous one passing:
+
+1. **Lint** - ESLint + Prettier format check.
+2. **Test** - `npm run test:ci` (`jest --ci --coverage`); results and coverage are published to Azure DevOps' native reporting UI via `jest-junit` (JUnit format) and Jest's Cobertura coverage reporter.
+3. **Build** - `next build`, confirming the app actually builds for production (a lint/test pass alone doesn't guarantee that, e.g. build-time type errors).
+
+Runs automatically on pushes to `main` and on Pull Requests targeting `main`.
 
 ## Getting Started
 
@@ -175,6 +205,7 @@ Open [http://localhost:3000](http://localhost:3000). API calls are intercepted b
 ```bash
 npm test            # run all tests
 npm run test:watch  # watch mode
+npm run test:ci      # CI mode with coverage (used by the Azure DevOps pipeline)
 ```
 
 ### jsdom + MSW v2 polyfill setup
@@ -204,12 +235,12 @@ Scheduling confirmation/reschedule at `/scheduling`, orchestrated end-to-end by 
 - Clientes (Criar/Editar/Consultar) - ✅ Done, at `/customers`.
 - Itens (Criar/Consultar) - ✅ Done, at `/items`.
 
-**Auditoria** - ⚠️ **Partial.** Events are logged to the `audit` Redux slice on scheduling changes, but there's no dedicated screen to view the trail yet.
+**Auditoria** - ✅ Done. Events are logged on Sales Order creation, status changes, and scheduling confirmations, all viewable at `/audit` (`shared/components/AuditTrail.tsx`).
 
 **Tests** - ✅ Done, exceeds the minimum (2 unit + 1 integration required; this project has significantly more, spread across every feature).
 
-**CI/CD (Azure DevOps)** - ❌ Not started.
+**CI/CD (Azure DevOps)** - ✅ Done. `azure-pipelines.yml` at the repo root: Lint → Test (with JUnit + Cobertura reporting) → Build, gated stages (`dependsOn`), runs on pushes and PRs to `main`.
 
 ## Status
 
-🚧 Work in progress - this README is being built incrementally alongside development.
+All functional requirements from the challenge are implemented. Remaining work is incremental polish (e.g. broader test coverage as the app evolves) rather than missing features.
