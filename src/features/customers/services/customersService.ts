@@ -5,4 +5,6 @@ import type { CreateCustomerInput } from "@/features/customers/schemas";
 export const customersService = {
   list: () => httpClient.get<Customer[]>("/customers"),
   create: (input: CreateCustomerInput) => httpClient.post<Customer>("/customers", input),
+  update: (id: string, input: CreateCustomerInput) =>
+    httpClient.patch<Customer>(`/customers/${id}`, input),
 };

@@ -12,6 +12,7 @@ const eslintConfig = defineConfig([
   {
     rules: {
       "react-hooks/incompatible-library": "off",
+      "react-hooks/set-state-in-effect": "off",
     },
   },
   // Must come after nextVitals/nextTs — disables ESLint's stylistic

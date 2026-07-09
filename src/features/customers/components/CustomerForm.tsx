@@ -1,19 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createCustomerSchema, type CreateCustomerInput } from "@/features/customers/schemas";
 import { useCreateCustomer } from "@/features/customers/hooks/useCreateCustomer";
+import { useUpdateCustomer } from "@/features/customers/hooks/useUpdateCustomer";
 import { useTransportTypes } from "@/features/transport-types/hooks/useTransportTypes";
+import type { Customer } from "@/features/customers/types";
 import { TextField } from "@/shared/components/ui/TextField";
 import { Checkbox } from "@/shared/components/ui/Checkbox";
 import { Button } from "@/shared/components/ui/Button";
 
-export function CustomerForm() {
-  const [justCreated, setJustCreated] = useState(false);
+interface CustomerFormProps {
+  customer?: Customer | null;
+  onCancelEdit?: () => void;
+}
+
+const emptyValues: CreateCustomerInput = {
+  name: "",
+  document: "",
+  authorizedTransportTypeIds: [],
+};
+
+export function CustomerForm({ customer, onCancelEdit }: CustomerFormProps) {
+  const [justSaved, setJustSaved] = useState(false);
+  const isEditing = Boolean(customer);
+
   const { data: transportTypes, isLoading: isLoadingTransportTypes } = useTransportTypes();
   const createCustomer = useCreateCustomer();
+  const updateCustomer = useUpdateCustomer(customer?.id ?? "");
+  const mutation = isEditing ? updateCustomer : createCustomer;
 
   const {
     register,
@@ -23,15 +40,36 @@ export function CustomerForm() {
     formState: { errors },
   } = useForm<CreateCustomerInput>({
     resolver: zodResolver(createCustomerSchema),
-    defaultValues: { name: "", document: "", authorizedTransportTypeIds: [] },
+    defaultValues: customer
+      ? {
+          name: customer.name,
+          document: customer.document,
+          authorizedTransportTypeIds: customer.authorizedTransportTypeIds,
+        }
+      : emptyValues,
   });
 
+  useEffect(() => {
+    reset(
+      customer
+        ? {
+            name: customer.name,
+            document: customer.document,
+            authorizedTransportTypeIds: customer.authorizedTransportTypeIds,
+          }
+        : emptyValues
+    );
+    setJustSaved(false);
+  }, [customer, reset]);
+
   const onSubmit = handleSubmit((data) => {
-    setJustCreated(false);
-    createCustomer.mutate(data, {
+    setJustSaved(false);
+    mutation.mutate(data, {
       onSuccess: () => {
-        reset();
-        setJustCreated(true);
+        setJustSaved(true);
+        if (!isEditing) {
+          reset(emptyValues);
+        }
       },
     });
   });
@@ -98,21 +136,28 @@ export function CustomerForm() {
         )}
       </div>
 
-      {createCustomer.isError && (
+      {mutation.isError && (
         <p className="text-error text-sm" role="alert">
-          Não foi possível salvar este cliente: {createCustomer.error.message}
+          Não foi possível salvar este cliente: {mutation.error.message}
         </p>
       )}
 
-      {justCreated && (
+      {justSaved && (
         <p className="text-sm text-green-700" role="status">
-          Cliente cadastrado.
+          {isEditing ? "Cliente atualizado." : "Cliente cadastrado."}
         </p>
       )}
 
-      <Button type="submit" disabled={createCustomer.isPending}>
-        {createCustomer.isPending ? "Salvando…" : "Salvar cliente"}
-      </Button>
+      <div className="flex gap-3">
+        <Button type="submit" disabled={mutation.isPending}>
+          {mutation.isPending ? "Salvando…" : isEditing ? "Salvar alterações" : "Salvar cliente"}
+        </Button>
+        {isEditing && (
+          <Button type="button" variant="text" onClick={onCancelEdit}>
+            Cancelar
+          </Button>
+        )}
+      </div>
     </form>
   );
 }

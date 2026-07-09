@@ -15,9 +15,9 @@ describe("CustomerForm", () => {
         HttpResponse.json([{ id: "tt-1", name: "Caminhão" }])
       ),
       http.post(`${BASE}/customers`, async ({ request }) => {
-        // delay controlado: garante uma janela para observarmos o estado
-        // "pending" antes da resposta resolver - sem isso, o mock resolve
-        // rápido demais para o estado intermediário ser verificado.
+        // Controlled delay: gives us a window to observe the "pending"
+        // state before the response resolves — without this, the mock
+        // resolves too fast to verify the intermediate state.
         await delay(100);
         const body = (await request.json()) as CreateCustomerInput;
         return HttpResponse.json({ id: "cust-1", ...body }, { status: 201 });
@@ -33,10 +33,10 @@ describe("CustomerForm", () => {
     await user.click(screen.getByLabelText("Caminhão"));
     await user.click(screen.getByRole("button", { name: "Salvar cliente" }));
 
-    // enquanto a mutation está pendente, o botão troca de texto e desabilita
+    // While the mutation is pending, the button changes text and disables
     expect(screen.getByRole("button", { name: "Salvando…" })).toBeDisabled();
 
-    // e, ao resolver, volta ao estado normal com a confirmação
+    // Once resolved, it goes back to normal with the confirmation message
     await waitFor(() => {
       expect(screen.getByText("Cliente cadastrado.")).toBeInTheDocument();
     });
@@ -56,7 +56,7 @@ describe("CustomerForm", () => {
     const user = userEvent.setup();
     renderWithQueryClient(<CustomerForm />);
 
-    // espera a lista de transportes carregar antes de interagir
+    // Wait for the transport type list to load before interacting
     await screen.findByLabelText("Caminhão");
 
     await user.type(screen.getByLabelText("Nome do cliente"), "Distribuidora Teste");
@@ -86,5 +86,42 @@ describe("CustomerForm", () => {
     expect(
       screen.getByText("Selecione ao menos um tipo de transporte autorizado")
     ).toBeInTheDocument();
+  });
+
+  it("edita um cliente existente, pré-preenchendo os dados atuais", async () => {
+    server.use(
+      http.get(`${BASE}/transport-types`, () =>
+        HttpResponse.json([
+          { id: "tt-1", name: "Caminhão" },
+          { id: "tt-2", name: "Carreta" },
+        ])
+      ),
+      http.patch(`${BASE}/customers/cust-1`, async ({ request }) => {
+        const body = (await request.json()) as CreateCustomerInput;
+        return HttpResponse.json({ id: "cust-1", ...body });
+      })
+    );
+
+    const existingCustomer = {
+      id: "cust-1",
+      name: "Distribuidora Central",
+      document: "12345678900",
+      authorizedTransportTypeIds: ["tt-1"],
+    };
+
+    const user = userEvent.setup();
+    renderWithQueryClient(<CustomerForm customer={existingCustomer} />);
+
+    await screen.findByLabelText("Caminhão");
+    expect(screen.getByLabelText("Nome do cliente")).toHaveValue("Distribuidora Central");
+    expect(screen.getByLabelText("Caminhão")).toBeChecked();
+    expect(screen.getByLabelText("Carreta")).not.toBeChecked();
+
+    await user.click(screen.getByLabelText("Carreta"));
+    await user.click(screen.getByRole("button", { name: "Salvar alterações" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Cliente atualizado.")).toBeInTheDocument();
+    });
   });
 });

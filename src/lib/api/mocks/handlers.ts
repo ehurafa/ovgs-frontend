@@ -23,6 +23,15 @@ export const handlers = [
     return HttpResponse.json(created, { status: 201 });
   }),
 
+  http.patch(`${BASE}/customers/:id`, async ({ params, request }) => {
+    const customer = customers.find((c) => c.id === params.id);
+    if (!customer) return HttpResponse.json({ message: "Customer not found" }, { status: 404 });
+
+    const body = (await request.json()) as CreateCustomerInput;
+    Object.assign(customer, body);
+    return HttpResponse.json(customer);
+  }),
+
   // --- Transport Types ---
   http.get(`${BASE}/transport-types`, () => HttpResponse.json(transportTypes)),
 
