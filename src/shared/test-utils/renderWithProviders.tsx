@@ -4,7 +4,6 @@ import { Provider } from "react-redux";
 import { createAppStore } from "@/lib/store/store";
 import type { ReactElement } from "react";
 import type { Task } from "redux-saga";
-
 /**
  * Like renderWithQueryClient, but also wraps a fresh Redux store (with
  * its own saga middleware instance) — needed for anything that
@@ -22,11 +21,13 @@ export function renderWithProviders(ui: ReactElement) {
   const { store, task } = createAppStore();
   activeTasks.push(task);
 
-  return render(
+  const utils = render(
     <QueryClientProvider client={queryClient}>
       <Provider store={store}>{ui}</Provider>
     </QueryClientProvider>
   );
+
+  return { ...utils, store };
 }
 
 export function cancelActiveSagaTasks() {
