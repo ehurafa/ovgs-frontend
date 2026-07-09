@@ -4,7 +4,7 @@ import Link, { type LinkProps } from "next/link";
 type ButtonVariant = "filled" | "text";
 
 const baseClasses =
-  "inline-flex items-center justify-center rounded-full px-6 py-2.5 text-sm font-medium transition-all disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-full px-6 py-2.5 text-sm font-medium transition-all disabled:cursor-not-allowed disabled:opacity-50";
 
 const variantClasses: Record<ButtonVariant, string> = {
   filled: "bg-primary text-on-primary shadow-sm hover:bg-primary-dark hover:shadow-md",

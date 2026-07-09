@@ -1,73 +1,73 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="jest tests" tests="24" failures="0" errors="0" time="4.448">
-  <testsuite name="AuditTrail" errors="0" failures="0" skipped="0" timestamp="2026-07-09T22:59:51" time="1.611" tests="2">
-    <testcase classname="AuditTrail exibe uma mensagem quando não há eventos registrados" name="AuditTrail exibe uma mensagem quando não há eventos registrados" time="0.052">
+<testsuites name="jest tests" tests="24" failures="0" errors="0" time="4.13">
+  <testsuite name="AuditTrail" errors="0" failures="0" skipped="0" timestamp="2026-07-09T23:16:02" time="1.459" tests="2">
+    <testcase classname="AuditTrail exibe uma mensagem quando não há eventos registrados" name="AuditTrail exibe uma mensagem quando não há eventos registrados" time="0.047">
     </testcase>
-    <testcase classname="AuditTrail exibe os eventos registrados" name="AuditTrail exibe os eventos registrados" time="0.041">
-    </testcase>
-  </testsuite>
-  <testsuite name="createSalesOrderSchema" errors="0" failures="0" skipped="0" timestamp="2026-07-09T22:59:53" time="0.339" tests="2">
-    <testcase classname="createSalesOrderSchema aceita um payload válido com ao menos um item" name="createSalesOrderSchema aceita um payload válido com ao menos um item" time="0.004">
-    </testcase>
-    <testcase classname="createSalesOrderSchema rejeita quando não há nenhum item" name="createSalesOrderSchema rejeita quando não há nenhum item" time="0.004">
+    <testcase classname="AuditTrail exibe os eventos registrados" name="AuditTrail exibe os eventos registrados" time="0.039">
     </testcase>
   </testsuite>
-  <testsuite name="MonitoringScreen" errors="0" failures="0" skipped="0" timestamp="2026-07-09T22:59:51" time="2.163" tests="1">
-    <testcase classname="MonitoringScreen filtra a lista de ordens de venda ao selecionar um status" name="MonitoringScreen filtra a lista de ordens de venda ao selecionar um status" time="0.477">
+  <testsuite name="ItemList" errors="0" failures="0" skipped="0" timestamp="2026-07-09T23:16:03" time="0.291" tests="2">
+    <testcase classname="ItemList exibe os itens cadastrados" name="ItemList exibe os itens cadastrados" time="0.079">
+    </testcase>
+    <testcase classname="ItemList exibe uma mensagem quando não há itens cadastrados" name="ItemList exibe uma mensagem quando não há itens cadastrados" time="0.02">
     </testcase>
   </testsuite>
-  <testsuite name="SalesOrderDetail" errors="0" failures="0" skipped="0" timestamp="2026-07-09T22:59:51" time="2.162" tests="2">
-    <testcase classname="SalesOrderDetail mostra apenas a transição válida para o status atual e avança com sucesso" name="SalesOrderDetail mostra apenas a transição válida para o status atual e avança com sucesso" time="0.41">
-    </testcase>
-    <testcase classname="SalesOrderDetail exibe o erro quando a API rejeita uma transição inválida" name="SalesOrderDetail exibe o erro quando a API rejeita uma transição inválida" time="0.069">
+  <testsuite name="MonitoringScreen" errors="0" failures="0" skipped="0" timestamp="2026-07-09T23:16:02" time="1.911" tests="1">
+    <testcase classname="MonitoringScreen filtra a lista de ordens de venda ao selecionar um status" name="MonitoringScreen filtra a lista de ordens de venda ao selecionar um status" time="0.449">
     </testcase>
   </testsuite>
-  <testsuite name="SchedulingForm" errors="0" failures="0" skipped="0" timestamp="2026-07-09T22:59:51" time="2.291" tests="2">
-    <testcase classname="SchedulingForm confirma o agendamento via saga e mostra sucesso" name="SchedulingForm confirma o agendamento via saga e mostra sucesso" time="0.431">
+  <testsuite name="SalesOrderDetail" errors="0" failures="0" skipped="0" timestamp="2026-07-09T23:16:02" time="1.973" tests="2">
+    <testcase classname="SalesOrderDetail mostra apenas a transição válida para o status atual e avança com sucesso" name="SalesOrderDetail mostra apenas a transição válida para o status atual e avança com sucesso" time="0.396">
     </testcase>
-    <testcase classname="SchedulingForm exibe o erro quando a API rejeita o agendamento" name="SchedulingForm exibe o erro quando a API rejeita o agendamento" time="0.06">
-    </testcase>
-  </testsuite>
-  <testsuite name="TransportTypeForm" errors="0" failures="0" skipped="0" timestamp="2026-07-09T22:59:51" time="2.417" tests="3">
-    <testcase classname="TransportTypeForm cria um tipo de transporte com sucesso" name="TransportTypeForm cria um tipo de transporte com sucesso" time="0.417">
-    </testcase>
-    <testcase classname="TransportTypeForm edita um tipo de transporte existente, pré-preenchendo o nome atual" name="TransportTypeForm edita um tipo de transporte existente, pré-preenchendo o nome atual" time="0.185">
-    </testcase>
-    <testcase classname="TransportTypeForm exibe erro de validação ao submeter nome vazio" name="TransportTypeForm exibe erro de validação ao submeter nome vazio" time="0.037">
+    <testcase classname="SalesOrderDetail exibe o erro quando a API rejeita uma transição inválida" name="SalesOrderDetail exibe o erro quando a API rejeita uma transição inválida" time="0.11">
     </testcase>
   </testsuite>
-  <testsuite name="ItemList" errors="0" failures="0" skipped="0" timestamp="2026-07-09T22:59:53" time="0.468" tests="2">
-    <testcase classname="ItemList exibe os itens cadastrados" name="ItemList exibe os itens cadastrados" time="0.059">
+  <testsuite name="SchedulingForm" errors="0" failures="0" skipped="0" timestamp="2026-07-09T23:16:02" time="2.026" tests="2">
+    <testcase classname="SchedulingForm confirma o agendamento via saga e mostra sucesso" name="SchedulingForm confirma o agendamento via saga e mostra sucesso" time="0.392">
     </testcase>
-    <testcase classname="ItemList exibe uma mensagem quando não há itens cadastrados" name="ItemList exibe uma mensagem quando não há itens cadastrados" time="0.016">
-    </testcase>
-  </testsuite>
-  <testsuite name="createTransportTypeSchema" errors="0" failures="0" skipped="0" timestamp="2026-07-09T22:59:54" time="0.32" tests="2">
-    <testcase classname="createTransportTypeSchema aceita um nome válido" name="createTransportTypeSchema aceita um nome válido" time="0.003">
-    </testcase>
-    <testcase classname="createTransportTypeSchema rejeita nome com menos de 2 caracteres" name="createTransportTypeSchema rejeita nome com menos de 2 caracteres" time="0.001">
+    <testcase classname="SchedulingForm exibe o erro quando a API rejeita o agendamento" name="SchedulingForm exibe o erro quando a API rejeita o agendamento" time="0.054">
     </testcase>
   </testsuite>
-  <testsuite name="createCustomerSchema" errors="0" failures="0" skipped="0" timestamp="2026-07-09T22:59:54" time="0.343" tests="2">
-    <testcase classname="createCustomerSchema aceita um payload válido" name="createCustomerSchema aceita um payload válido" time="0.002">
+  <testsuite name="TransportTypeForm" errors="0" failures="0" skipped="0" timestamp="2026-07-09T23:16:02" time="2.18" tests="3">
+    <testcase classname="TransportTypeForm cria um tipo de transporte com sucesso" name="TransportTypeForm cria um tipo de transporte com sucesso" time="0.39">
+    </testcase>
+    <testcase classname="TransportTypeForm edita um tipo de transporte existente, pré-preenchendo o nome atual" name="TransportTypeForm edita um tipo de transporte existente, pré-preenchendo o nome atual" time="0.126">
+    </testcase>
+    <testcase classname="TransportTypeForm exibe erro de validação ao submeter nome vazio" name="TransportTypeForm exibe erro de validação ao submeter nome vazio" time="0.025">
+    </testcase>
+  </testsuite>
+  <testsuite name="createCustomerSchema" errors="0" failures="0" skipped="0" timestamp="2026-07-09T23:16:03" time="0.44" tests="2">
+    <testcase classname="createCustomerSchema aceita um payload válido" name="createCustomerSchema aceita um payload válido" time="0.004">
     </testcase>
     <testcase classname="createCustomerSchema rejeita quando nenhum tipo de transporte é selecionado" name="createCustomerSchema rejeita quando nenhum tipo de transporte é selecionado" time="0.002">
     </testcase>
   </testsuite>
-  <testsuite name="SalesOrderForm" errors="0" failures="0" skipped="0" timestamp="2026-07-09T22:59:51" time="2.545" tests="2">
-    <testcase classname="SalesOrderForm só lista tipos de transporte autorizados para o cliente selecionado" name="SalesOrderForm só lista tipos de transporte autorizados para o cliente selecionado" time="0.533">
+  <testsuite name="createSalesOrderSchema" errors="0" failures="0" skipped="0" timestamp="2026-07-09T23:16:04" time="0.344" tests="2">
+    <testcase classname="createSalesOrderSchema aceita um payload válido com ao menos um item" name="createSalesOrderSchema aceita um payload válido com ao menos um item" time="0.004">
     </testcase>
-    <testcase classname="SalesOrderForm cria uma ordem de venda com sucesso" name="SalesOrderForm cria uma ordem de venda com sucesso" time="0.205">
+    <testcase classname="createSalesOrderSchema rejeita quando não há nenhum item" name="createSalesOrderSchema rejeita quando não há nenhum item" time="0.001">
     </testcase>
   </testsuite>
-  <testsuite name="CustomerForm" errors="0" failures="0" skipped="0" timestamp="2026-07-09T22:59:51" time="2.74" tests="4">
-    <testcase classname="CustomerForm mostra o estado de carregamento enquanto a requisição está pendente" name="CustomerForm mostra o estado de carregamento enquanto a requisição está pendente" time="0.675">
+  <testsuite name="SalesOrderForm" errors="0" failures="0" skipped="0" timestamp="2026-07-09T23:16:02" time="2.281" tests="2">
+    <testcase classname="SalesOrderForm só lista tipos de transporte autorizados para o cliente selecionado" name="SalesOrderForm só lista tipos de transporte autorizados para o cliente selecionado" time="0.431">
     </testcase>
-    <testcase classname="CustomerForm cria um cliente com sucesso e exibe a mensagem de confirmação" name="CustomerForm cria um cliente com sucesso e exibe a mensagem de confirmação" time="0.128">
+    <testcase classname="SalesOrderForm cria uma ordem de venda com sucesso" name="SalesOrderForm cria uma ordem de venda com sucesso" time="0.231">
     </testcase>
-    <testcase classname="CustomerForm exibe os erros de validação ao submeter o formulário vazio" name="CustomerForm exibe os erros de validação ao submeter o formulário vazio" time="0.029">
+  </testsuite>
+  <testsuite name="createTransportTypeSchema" errors="0" failures="0" skipped="0" timestamp="2026-07-09T23:16:04" time="0.31" tests="2">
+    <testcase classname="createTransportTypeSchema aceita um nome válido" name="createTransportTypeSchema aceita um nome válido" time="0.002">
     </testcase>
-    <testcase classname="CustomerForm edita um cliente existente, pré-preenchendo os dados atuais" name="CustomerForm edita um cliente existente, pré-preenchendo os dados atuais" time="0.048">
+    <testcase classname="createTransportTypeSchema rejeita nome com menos de 2 caracteres" name="createTransportTypeSchema rejeita nome com menos de 2 caracteres" time="0.002">
+    </testcase>
+  </testsuite>
+  <testsuite name="CustomerForm" errors="0" failures="0" skipped="0" timestamp="2026-07-09T23:16:02" time="2.456" tests="4">
+    <testcase classname="CustomerForm mostra o estado de carregamento enquanto a requisição está pendente" name="CustomerForm mostra o estado de carregamento enquanto a requisição está pendente" time="0.653">
+    </testcase>
+    <testcase classname="CustomerForm cria um cliente com sucesso e exibe a mensagem de confirmação" name="CustomerForm cria um cliente com sucesso e exibe a mensagem de confirmação" time="0.16">
+    </testcase>
+    <testcase classname="CustomerForm exibe os erros de validação ao submeter o formulário vazio" name="CustomerForm exibe os erros de validação ao submeter o formulário vazio" time="0.028">
+    </testcase>
+    <testcase classname="CustomerForm edita um cliente existente, pré-preenchendo os dados atuais" name="CustomerForm edita um cliente existente, pré-preenchendo os dados atuais" time="0.054">
     </testcase>
   </testsuite>
 </testsuites>
