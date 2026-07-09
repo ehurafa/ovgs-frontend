@@ -31,8 +31,12 @@ function* confirmSchedulingWorker(
       })
     );
 
-    queryClient.setQueryData(salesOrderKeys.detail(orderId), updatedOrder);
-    yield call(() => queryClient.invalidateQueries({ queryKey: salesOrderKeys.lists() }));
+    try {
+      queryClient.setQueryData(salesOrderKeys.detail(orderId), updatedOrder);
+      yield call(() => queryClient.invalidateQueries({ queryKey: salesOrderKeys.lists() }));
+    } catch (cacheError) {
+      console.error("Failed to sync React Query cache after scheduling confirmation", cacheError);
+    }
 
     yield put(confirmSchedulingSucceeded());
   } catch (error) {

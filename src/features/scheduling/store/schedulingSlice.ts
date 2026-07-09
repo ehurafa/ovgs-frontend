@@ -19,8 +19,9 @@ const schedulingSlice = createSlice({
   reducers: {
     confirmSchedulingRequested: (
       state,
-      _action: PayloadAction<{ orderId: string; input: SchedulingInput }>
+      action: PayloadAction<{ orderId: string; input: SchedulingInput }>
     ) => {
+      state.orderId = action.payload.orderId;
       state.status = "confirming";
       state.error = null;
     },
