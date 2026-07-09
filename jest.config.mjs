@@ -27,6 +27,11 @@ async function config() {
     // Transforming everything in node_modules avoids that entirely — the
     // trade-off (slightly slower test runs) is negligible for this project.
     transformIgnorePatterns: [],
+    // Azure DevOps understands JUnit (test results) and Cobertura
+    // (coverage) natively — these are only produced when running with
+    // --coverage/--ci (see the `test:ci` script), not in local dev runs.
+    coverageReporters: ["text", "cobertura", "html"],
+    reporters: ["default", ["jest-junit", { outputDirectory: "reports", outputName: "junit.xml" }]],
   };
 }
 
