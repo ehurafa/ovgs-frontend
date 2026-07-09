@@ -6,6 +6,8 @@ export interface SalesOrderFilters {
   status?: SalesOrderStatus;
   customerId?: string;
   transportTypeId?: string;
+  /** ISO date (YYYY-MM-DD); matches orders created on that day. */
+  date?: string;
 }
 
 function toQueryString(filters: SalesOrderFilters) {
@@ -13,6 +15,7 @@ function toQueryString(filters: SalesOrderFilters) {
   if (filters.status) params.set("status", filters.status);
   if (filters.customerId) params.set("customerId", filters.customerId);
   if (filters.transportTypeId) params.set("transportTypeId", filters.transportTypeId);
+  if (filters.date) params.set("date", filters.date);
   const query = params.toString();
   return query ? `?${query}` : "";
 }

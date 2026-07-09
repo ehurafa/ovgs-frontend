@@ -1,12 +1,7 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-import type { SalesOrderStatus } from "@/features/sales-orders/types";
+import type { SalesOrderFilters } from "@/features/sales-orders/services/salesOrdersService";
 
-export interface SalesOrderFiltersState {
-  status?: SalesOrderStatus;
-  customerId?: string;
-  transportTypeId?: string;
-  date?: string;
-}
+export type SalesOrderFiltersState = SalesOrderFilters;
 
 const initialState: SalesOrderFiltersState = {};
 

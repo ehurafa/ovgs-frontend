@@ -5,9 +5,14 @@ import { useSalesOrders } from "@/features/sales-orders/hooks/useSalesOrders";
 import { useCustomers } from "@/features/customers/hooks/useCustomers";
 import { useTransportTypes } from "@/features/transport-types/hooks/useTransportTypes";
 import { StatusBadge } from "./StatusBadge";
+import type { SalesOrderFilters } from "@/features/sales-orders/services/salesOrdersService";
 
-export function SalesOrdersList() {
-  const { data: salesOrders, isLoading } = useSalesOrders();
+interface SalesOrdersListProps {
+  filters?: SalesOrderFilters;
+}
+
+export function SalesOrdersList({ filters = {} }: SalesOrdersListProps) {
+  const { data: salesOrders, isLoading } = useSalesOrders(filters);
   const { data: customers } = useCustomers();
   const { data: transportTypes } = useTransportTypes();
 
@@ -17,7 +22,9 @@ export function SalesOrdersList() {
 
   if (!salesOrders || salesOrders.length === 0) {
     return (
-      <p className="text-on-surface-muted text-sm">Nenhuma ordem de venda cadastrada ainda.</p>
+      <p className="text-on-surface-muted text-sm">
+        Nenhuma ordem de venda encontrada para os filtros selecionados.
+      </p>
     );
   }
 

@@ -60,11 +60,13 @@ export const handlers = [
     const status = url.searchParams.get("status");
     const customerId = url.searchParams.get("customerId");
     const transportTypeId = url.searchParams.get("transportTypeId");
+    const date = url.searchParams.get("date");
 
     const filtered = salesOrders.filter((order) => {
       if (status && order.status !== status) return false;
       if (customerId && order.customerId !== customerId) return false;
       if (transportTypeId && order.transportTypeId !== transportTypeId) return false;
+      if (date && !order.createdAt.startsWith(date)) return false;
       return true;
     });
 
