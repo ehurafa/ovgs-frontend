@@ -30,6 +30,7 @@ The system centralizes operations that today are spread across multiple tools:
 | Testing             | Jest + React Testing Library            | Unit and integration tests                                      |
 | CI/CD               | Azure DevOps Pipelines                  | Lint → Test → Build                                             |
 | Code quality        | ESLint + Prettier + Husky + lint-staged | Enforced automatically on every commit                          |
+| UI design system    | Custom Tailwind components              | Material Design-inspired (`shared/components/ui/`)              |
 
 ## Architecture
 
@@ -39,16 +40,21 @@ The project follows a **feature-based structure** (screaming architecture): fold
 src/
   app/                   # Next.js routes (thin routing layer only)
     sales-orders/
+      page.tsx             # list
+      new/page.tsx         # create form
+      [id]/page.tsx        # detail + status transitions
     customers/
     transport-types/
     items/
     scheduling/
+    monitoring/
   features/              # one folder per business domain
     sales-orders/
       components/
       hooks/
       services/
       store/              # salesOrderFiltersSlice
+      constants.ts        # STATUS_LABELS, STATUS_STYLES
       types.ts
       schemas.ts
     customers/
@@ -60,17 +66,30 @@ src/
       types.ts
       schemas.ts
   shared/
+    components/ui/        # TextField, Select, Checkbox, Button, Card
+    test-utils/           # renderWithQueryClient, renderWithProviders
     store/                # auditSlice (cross-cutting)
     types.ts
   lib/
     api/
-      mocks/               # data, handlers, browser, MockProvider
+      mocks/               # data, handlers, browser, server, MockProvider
       httpClient.ts
     query/                 # queryClient, QueryProvider
-    store/                 # store, rootReducer, rootSaga, hooks, StoreProvider
+    store/                 # store (factory), rootReducer, rootSaga, hooks, StoreProvider
 ```
 
 `app/` stays intentionally thin - pages import and render components from `features/`. This keeps routing and business logic decoupled.
+
+## UI Design System
+
+A small set of shared, reusable primitives (`shared/components/ui/`) implements a Material Design-inspired look using plain Tailwind utility classes - no component library (e.g. MUI) involved:
+
+- **`TextField` / `Select`** - "outlined" style, label above, primary-colored focus ring, error state in the error color.
+- **`Button`** - "filled" (primary CTA, `rounded-full`, elevation grows on hover) and "text" (low-emphasis) variants.
+- **`Checkbox`** - Material-style checkbox with a primary accent color.
+- **`Card`** - elevated surface (`shadow-sm`, rounded corners) wrapping page content.
+
+Colors are defined as semantic tokens in `globals.css` (`--color-primary`, `--color-on-primary`, `--color-surface`, `--color-on-surface`, `--color-outline`, `--color-error`), not hardcoded Tailwind palette colors - this means the whole app's color scheme can be changed by editing one `@theme` block, and every component reads a _role_ (`bg-primary`, `text-on-surface`) rather than a literal shade.
 
 ## Sales Order Lifecycle
 
@@ -130,19 +149,26 @@ npm run format:check  # verify formatting without writing changes
 
 ## Getting Started
 
-> ⚠️ Setup in progress - instructions will be finalized once dependencies are installed.
-
 ```bash
 npm install
 npm run dev
 ```
+
+Open [http://localhost:3000](http://localhost:3000). API calls are intercepted by MSW automatically in development - no separate backend needed.
 
 ## Testing
 
 - **Jest** (via `next/jest`, SWC-based, no Babel config needed) + **React Testing Library** + **user-event**.
 - **MSW powers both the running app and the tests** - `lib/api/mocks/handlers.ts` is shared by `browser.ts` (dev server) and `server.ts` (`setupServer`, used in tests), so tests exercise the exact same mocked API contract the UI runs against.
 - Every test gets its **own `QueryClient`** (`shared/test-utils/renderWithQueryClient.tsx`) - never the app's singleton, to avoid cache bleeding between tests.
+- Tests involving Redux/Saga use `renderWithProviders.tsx` instead, which also spins up a **fresh store per test** via a `createAppStore()` factory (rather than the app's singleton). Every saga task it starts is tracked and explicitly **cancelled in `afterEach`** (`jest.setup.ts`) - an uncancelled saga keeps running after its test ends, which can leak into later tests and leave Jest workers hanging.
 - `onUnhandledRequest: "error"` in tests (stricter than the app's `"bypass"`) - a test silently passing against a real network call is worse than a loud failure telling you an endpoint wasn't mocked.
+
+**A few testing patterns worth following consistently:**
+
+- For any element that depends on async data (React Query), use `findBy*` (waits) rather than `getBy*` (fails immediately) - and never cache a queried element across an action that can cause it to unmount/remount (e.g. a filter change triggering a new loading state); re-query fresh inside each `waitFor` instead.
+- `getAllByText`/`getByText` can match unintended elements if the same text also appears elsewhere on screen (e.g. inside an unrelated `<option>`); scope the query with `within(container)` when that's a risk.
+- `<input type="date">` (and other specialized input types) don't work reliably with `userEvent.type()` - use `fireEvent.change(input, { target: { value } })` instead.
 
 ```bash
 npm test            # run all tests
@@ -156,6 +182,31 @@ Jest's `jsdom` environment doesn't implement the Fetch API (`Request`/`Response`
 - `jest.polyfills.js` defines `TextEncoder`/`TextDecoder`, `ReadableStream`/`TransformStream`/`WritableStream`, `MessageChannel`/`MessagePort`, `BroadcastChannel`, and `fetch`/`Request`/`Response`/`Headers`/`FormData` (the last group sourced from `undici`, in the correct order - the stream/message globals must exist _before_ `undici` is required, since its fetch implementation reads them at import time).
 - Every defined property uses `configurable: true`. Without it, MSW's own interceptors fail with `Cannot redefine property` the moment they try to patch these same globals again - a fetch/Request polyfill that can't later be redefined defeats the purpose of an interceptor.
 - `jest.config.mjs` sets `transformIgnorePatterns: []` (transforms everything, including `node_modules`) because MSW ships several ESM-only internal dependencies (`@mswjs/interceptors`, `rettime`, and others); allow-listing them one at a time as errors surfaced proved slower than just transforming everything - a negligible performance cost for this project's test suite size.
+
+## Implementation Status
+
+Mapped against the challenge's own functional requirements:
+
+**Gestão de Ordens de Venda** - ✅ Done
+Create, list, detail view, and status transitions (respecting the state machine) are all implemented at `/sales-orders`, `/sales-orders/new`, `/sales-orders/[id]`.
+
+**Monitoramento Operacional** - ✅ Done
+Filters by status, customer, transport type, and date at `/monitoring`, backed by `salesOrderFiltersSlice` (Redux) + `useSalesOrders(filters)` (React Query).
+
+**Central de Agendamento** - ✅ Done
+Scheduling confirmation/reschedule at `/scheduling`, orchestrated end-to-end by `schedulingSaga`.
+
+**Cadastros:**
+
+- Tipos de Transporte (Criar/Editar/Consultar) - ✅ Done, at `/transport-types`.
+- Clientes - ⚠️ **Partial.** Only "Criar" has a screen (`/customers`). "Editar" and "Consultar" (a list view) are not yet built - `useCustomers`/`useCreateCustomer` exist, but no `useUpdateCustomer` hook or list screen yet.
+- Itens - ⚠️ **Partial.** Only "Criar" has a screen (`/items`). "Consultar" (a list view) is not yet built - `useItems` already exists and would only need a list component analogous to `TransportTypeList`.
+
+**Auditoria** - ⚠️ **Partial.** Events are logged to the `audit` Redux slice on scheduling changes, but there's no dedicated screen to view the trail yet.
+
+**Tests** - ✅ Done, exceeds the minimum (2 unit + 1 integration required; this project has significantly more, spread across every feature).
+
+**CI/CD (Azure DevOps)** - ❌ Not started.
 
 ## Status
 
