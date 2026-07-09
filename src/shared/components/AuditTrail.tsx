@@ -17,9 +17,23 @@ const ACTION_LABELS: Record<AuditEvent["action"], string> = {
   TRANSPORT_CHANGED: "Alteração de transporte",
 };
 
-function formatState(value: unknown): string {
+function formatState(event: AuditEvent, value: unknown): string {
   if (value === undefined || value === null) return "-";
   if (typeof value === "string") return value;
+
+  if (typeof value === "object") {
+    // Known shapes get a compact, human-readable summary instead of raw JSON.
+    if (event.action === "SCHEDULING_CHANGED") {
+      const { deliveryDate, window } = value as { deliveryDate?: string; window?: string };
+      return [deliveryDate, window].filter(Boolean).join(" · ") || "-";
+    }
+    if (event.action === "CREATED" && event.entity === "SalesOrder") {
+      const { items } = value as { items?: unknown[] };
+      const count = Array.isArray(items) ? items.length : 0;
+      return `Nova ordem · ${count} ${count === 1 ? "item" : "itens"}`;
+    }
+  }
+
   return JSON.stringify(value);
 }
 
@@ -57,9 +71,9 @@ export function AuditTrail() {
               </td>
               <td className="text-on-surface py-3 pr-4">{ACTION_LABELS[event.action]}</td>
               <td className="text-on-surface-muted py-3 pr-4">
-                {formatState(event.previousState)}
+                {formatState(event, event.previousState)}
               </td>
-              <td className="text-on-surface py-3">{formatState(event.newState)}</td>
+              <td className="text-on-surface py-3">{formatState(event, event.newState)}</td>
             </tr>
           ))}
         </tbody>
