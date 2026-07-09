@@ -149,6 +149,8 @@ npm run format:check  # verify formatting without writing changes
 
 ## Getting Started
 
+**Prerequisites:** Node.js ≥ 20 (developed and tested with **Node 24.15.0**).
+
 ```bash
 npm install
 npm run dev
@@ -199,8 +201,8 @@ Scheduling confirmation/reschedule at `/scheduling`, orchestrated end-to-end by 
 **Cadastros:**
 
 - Tipos de Transporte (Criar/Editar/Consultar) - ✅ Done, at `/transport-types`.
-- Clientes - ⚠️ **Partial.** Only "Criar" has a screen (`/customers`). "Editar" and "Consultar" (a list view) are not yet built - `useCustomers`/`useCreateCustomer` exist, but no `useUpdateCustomer` hook or list screen yet.
-- Itens - ⚠️ **Partial.** Only "Criar" has a screen (`/items`). "Consultar" (a list view) is not yet built - `useItems` already exists and would only need a list component analogous to `TransportTypeList`.
+- Clientes (Criar/Editar/Consultar) - ✅ Done, at `/customers`.
+- Itens (Criar/Consultar) - ✅ Done, at `/items`.
 
 **Auditoria** - ⚠️ **Partial.** Events are logged to the `audit` Redux slice on scheduling changes, but there's no dedicated screen to view the trail yet.
 
