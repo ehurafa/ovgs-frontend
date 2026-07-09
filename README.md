@@ -15,6 +15,8 @@ The system centralizes operations that today are spread across multiple tools:
 
 > This repository covers only the **frontend** scope of the challenge. The backend API is simulated using **MSW (Mock Service Worker)**.
 
+<img width="1132" height="788" alt="ordem-de-venda" src="https://github.com/user-attachments/assets/4509364e-16e4-4b89-a137-6ce4e9814d99" />
+
 ## Tech Stack
 
 | Category            | Technology                              | Notes                                                           |
