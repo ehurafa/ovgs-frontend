@@ -1,5 +1,9 @@
 # OVGS - Sales Order Management System (Frontend)
 
+**🔗 Live demo:** [ovgs-frontend-ruddy.vercel.app](https://ovgs-frontend-ruddy.vercel.app/)
+
+> The demo runs entirely client-side (Next.js static/serverless deployment on Vercel, no real backend). Each visitor gets their own mocked data via MSW, running in their own browser - data resets on page reload and isn't shared between visitors. This is expected behavior, not a bug.
+
 Frontend application for managing the lifecycle of Sales Orders (_Ordens de Venda_), built as part of a technical challenge focused on frontend architecture, state management, and code quality.
 
 ## Overview
@@ -217,32 +221,3 @@ Jest's `jsdom` environment doesn't implement the Fetch API (`Request`/`Response`
 - `jest.polyfills.js` defines `TextEncoder`/`TextDecoder`, `ReadableStream`/`TransformStream`/`WritableStream`, `MessageChannel`/`MessagePort`, `BroadcastChannel`, and `fetch`/`Request`/`Response`/`Headers`/`FormData` (the last group sourced from `undici`, in the correct order - the stream/message globals must exist _before_ `undici` is required, since its fetch implementation reads them at import time).
 - Every defined property uses `configurable: true`. Without it, MSW's own interceptors fail with `Cannot redefine property` the moment they try to patch these same globals again - a fetch/Request polyfill that can't later be redefined defeats the purpose of an interceptor.
 - `jest.config.mjs` sets `transformIgnorePatterns: []` (transforms everything, including `node_modules`) because MSW ships several ESM-only internal dependencies (`@mswjs/interceptors`, `rettime`, and others); allow-listing them one at a time as errors surfaced proved slower than just transforming everything - a negligible performance cost for this project's test suite size.
-
-## Implementation Status
-
-Mapped against the challenge's own functional requirements:
-
-**Gestão de Ordens de Venda** - ✅ Done
-Create, list, detail view, and status transitions (respecting the state machine) are all implemented at `/sales-orders`, `/sales-orders/new`, `/sales-orders/[id]`.
-
-**Monitoramento Operacional** - ✅ Done
-Filters by status, customer, transport type, and date at `/monitoring`, backed by `salesOrderFiltersSlice` (Redux) + `useSalesOrders(filters)` (React Query).
-
-**Central de Agendamento** - ✅ Done
-Scheduling confirmation/reschedule at `/scheduling`, orchestrated end-to-end by `schedulingSaga`.
-
-**Cadastros:**
-
-- Tipos de Transporte (Criar/Editar/Consultar) - ✅ Done, at `/transport-types`.
-- Clientes (Criar/Editar/Consultar) - ✅ Done, at `/customers`.
-- Itens (Criar/Consultar) - ✅ Done, at `/items`.
-
-**Auditoria** - ✅ Done. Events are logged on Sales Order creation, status changes, and scheduling confirmations, all viewable at `/audit` (`shared/components/AuditTrail.tsx`).
-
-**Tests** - ✅ Done, exceeds the minimum (2 unit + 1 integration required; this project has significantly more, spread across every feature).
-
-**CI/CD (Azure DevOps)** - ✅ Done. `azure-pipelines.yml` at the repo root: Lint → Test (with JUnit + Cobertura reporting) → Build, gated stages (`dependsOn`), runs on pushes and PRs to `main`.
-
-## Status
-
-All functional requirements from the challenge are implemented. Remaining work is incremental polish (e.g. broader test coverage as the app evolves) rather than missing features.
